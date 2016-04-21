@@ -1,12 +1,12 @@
 CC=g++
 CFLAGS=-g --std=c++11
-OBJ=main.o Node.o simlib.o
+OBJ=blockchain-sim.o Node.o simlib.o
 
 all: $(OBJ)
 	$(CC) -o blockchain-sim $(OBJ)
 
-main.o: main.cpp simlib.o
-	$(CC) $(CFLAGS) -c main.cpp simlib.c
+blockchain-sim.o: blockchain-sim.cpp simlib.o
+	$(CC) $(CFLAGS) -c blockchain-sim.cpp simlib.c
 
 Node.o: Node.cpp
 	$(CC) $(CFLAGS) -c Node.cpp
