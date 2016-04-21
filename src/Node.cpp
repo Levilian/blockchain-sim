@@ -13,7 +13,7 @@ Node::~Node() {
     delete this->_adjList;
 }
 
-void Node::add_link(Node* other_node, int speed) {
+void Node::add_link(Node* other_node, float speed) {
     Link* new_link = new Link(other_node, speed);
     this->_adjList->push_back(new_link);
 }

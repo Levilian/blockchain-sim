@@ -15,13 +15,13 @@ enum Type { RELAY, MINER };
 
 typedef struct Link {
     public:
-        Link(Node* other_node, int speed) {
+        Link(Node* other_node, float speed) {
             _other_node = other_node;
             _speed = speed;
         }
     private:
         Node* _other_node;
-        int _speed;
+        float _speed;
 } Link;
 
 class Node {
@@ -29,7 +29,8 @@ class Node {
         Node(Type type);
         ~Node();
         Type GetType() const { return _type; }
-        void add_link(Node* otherNode, int speed);
+        void add_link(Node* otherNode, float speed);
+        unsigned int get_num_links() { return _adjList->size(); }
     private:
         Type _type;
         vector<Link*>* _adjList;

@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-g -Wall --std=c++11
+CFLAGS=-g --std=c++11
 OBJ=main.o Node.o simlib.o
 
 all: $(OBJ)
