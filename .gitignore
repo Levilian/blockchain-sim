@@ -1,2 +1,4 @@
-src/blockchain-sim*
+src/blockchain-sim
+src/blockchain-sim.in
+src/blockchain-sim.out
 src/*.o
