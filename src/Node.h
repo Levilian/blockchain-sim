@@ -39,40 +39,43 @@ typedef struct Transaction {
 
 typedef struct Block {
     public:
-        Block(unsigned int block_no, vector<Transaction*>* transactions) {
+        Block(unsigned int block_no, vector<Transaction>* transactions) {
             _block_no = block_no;
             _transactions = transactions;
         }
         unsigned int get_block_no() { return _block_no; }
-        vector<Transaction*>* get_transactions() { return _transactions; }
+        vector<Transaction>* get_transactions() { return _transactions; }
     private:
         unsigned int _block_no;
-        vector<Transaction*>* _transactions;
+        vector<Transaction>* _transactions;
 } Block;
 
 class Node {
     public:
         Node(Type type, unsigned int node_no);
         ~Node();
-        Type GetType() const { return _type; }
+        Type get_type() const { return _type; }
         void add_link(Node* otherNode, float speed);
         unsigned int get_num_links() { return _adjList->size(); }
         void in_transit_tx(unsigned int tx_no);
-        void broadcast_transaction(Transaction* tx);
+        void in_transit_block(unsigned int block_no);
+        void broadcast_transaction(Transaction tx);
         void broadcast_block(Block* b);
         unsigned int get_node_no() { return _node_no; }
-        vector<Transaction*>* get_known_transactions() { return _known_transactions; }
-        vector<Block*>* get_known_blocks() { return _known_blocks; }
-        bool aware_of(Transaction* tx);
+        vector<Transaction>* get_known_transactions() { return new vector<Transaction>(*_known_transactions); }
+        vector<Block*>* get_known_blocks() { return new vector<Block*>(*_known_blocks); }
+        bool aware_of(Transaction tx);
         bool aware_of(Block* b);
         bool linked_to(unsigned int node_no);
+        vector<Transaction>* get_block_transactions(unsigned int block_no);
     private:
         friend ostream& operator<<(ostream& os, const Node& n);
         Type _type;
         vector<Link*>* _adjList;
-        vector<Transaction*>* _known_transactions;
+        vector<Transaction>* _known_transactions;
         vector<Block*>* _known_blocks;
         vector<unsigned int>* _in_transit_tx_nos;
+        vector<unsigned int>* _in_transit_block_nos;
         unsigned int _node_no;
 };
 

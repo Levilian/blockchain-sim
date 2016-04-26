@@ -54,7 +54,7 @@ int main() {
     init_simlib();
 
     // set number of attributes per record
-    maxatr = 4;
+    maxatr = 5;
 
     // initialize model
     init_model();
@@ -144,7 +144,7 @@ void new_transaction() {
     printf("new_transaction() from %d\n", random_index);
 
     //TODO use a smart algorithm to determine fee
-    Transaction* tx = new Transaction(num_transactions, 0.01);
+    Transaction tx = Transaction(num_transactions, 0.01);
 
     // let the network know about the transaction
     nodeList->at(random_index)->broadcast_transaction(tx);
@@ -154,11 +154,14 @@ void new_transaction() {
 }
 
 void new_block() {
-    printf("new_block()\n");
-
     ++num_blocks;
 
     unsigned int random_index = rand() % NUMBER_NODES;
+    while (!(nodeList->at(random_index)->get_type() == MINER)) {
+        random_index = rand() % NUMBER_NODES;
+    }
+
+    printf("new_block() from %d\n", random_index);
 
     Block* b = new Block(num_blocks, nodeList->at(random_index)->get_known_transactions());
 
@@ -170,17 +173,22 @@ void new_block() {
 }
 
 void tx_relay() {
-    int tx_no = transfer[3];
+    unsigned int tx_no = transfer[3];
     float tx_fee = transfer[4];
-    int node_no = transfer[5];
+    unsigned int node_no = transfer[5];
     printf("tx_relay() of tx %d to node %d\n", tx_no, node_no);
-    Transaction* tx = new Transaction(tx_no, tx_fee);
+    Transaction tx = Transaction(tx_no, tx_fee);
     nodeList->at(node_no)->broadcast_transaction(tx);
 }
 
 void block_relay() {
-    printf("block_relay()\n");
-    //TODO
+    unsigned int block_no = transfer[3];
+    unsigned int from_node = transfer[4];
+    unsigned int to_node = transfer[5];
+    printf("block_relay() of block %d from node %d to node %d\n", block_no, from_node, to_node);
+    vector<Transaction>* transactions = nodeList->at(from_node)->get_block_transactions(block_no);
+    Block* b = new Block(block_no, transactions);
+    nodeList->at(to_node)->broadcast_block(b);
 }
 
 void report() {
