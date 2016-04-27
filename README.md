@@ -9,7 +9,6 @@ This projects attempts to simulate a Bitcoin-like network.
 ## System Requirements
 
 * a C++ compiler (the Makefile assumes g++)
-* [Boost](http://www.boost.org)
 
 ## Build Instructions
 1. `$ cd src`
