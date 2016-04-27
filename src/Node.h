@@ -26,28 +26,37 @@ typedef struct Link {
 
 typedef struct Transaction {
     public:
-        Transaction(unsigned int tx_no, float tx_fee) {
+        Transaction(unsigned int tx_no, float tx_fee, float broadcast_time) {
             _tx_no = tx_no;
             _tx_fee = tx_fee;
+            _broadcast_time = broadcast_time;
         }
         unsigned int get_tx_no() { return _tx_no; }
         float get_tx_fee() { return _tx_fee; }
+        float get_broadcast_time() { return _broadcast_time; }
+        float get_confirmation_time() { return _confirmation_time; }
+        void set_confirmation_time(float conf_time) { _confirmation_time = conf_time; }
     private:
         unsigned int _tx_no;
         float _tx_fee;
+        float _broadcast_time;
+        float _confirmation_time;
 } Transaction;
 
 typedef struct Block {
     public:
-        Block(unsigned int block_no, vector<Transaction>* transactions) {
+        Block(unsigned int block_no, vector<Transaction>* transactions, float block_time) {
             _block_no = block_no;
             _transactions = transactions;
+            _block_time = block_time;
         }
         unsigned int get_block_no() { return _block_no; }
         vector<Transaction>* get_transactions() { return _transactions; }
+        float get_block_time() { return _block_time; }
     private:
         unsigned int _block_no;
         vector<Transaction>* _transactions;
+        float _block_time;
 } Block;
 
 class Node {

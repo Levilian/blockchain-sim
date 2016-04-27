@@ -54,7 +54,7 @@ int main() {
     init_simlib();
 
     // set number of attributes per record
-    maxatr = 5;
+    maxatr = 6;
 
     // initialize model
     init_model();
@@ -141,10 +141,10 @@ void new_transaction() {
 
     unsigned int random_index = rand() % NUMBER_NODES;
 
-    printf("new_transaction() from %d\n", random_index);
+    printf("new_transaction() %d from %d at t=%f\n", num_transactions, random_index, sim_time);
 
     //TODO use a smart algorithm to determine fee
-    Transaction tx = Transaction(num_transactions, 0.01);
+    Transaction tx = Transaction(num_transactions, 0.01, sim_time);
 
     // let the network know about the transaction
     nodeList->at(random_index)->broadcast_transaction(tx);
@@ -163,7 +163,14 @@ void new_block() {
 
     printf("new_block() from %d\n", random_index);
 
-    Block* b = new Block(num_blocks, nodeList->at(random_index)->get_known_transactions());
+    float block_time = sim_time;
+
+    vector<Transaction>* tx_list = nodeList->at(random_index)->get_known_transactions();
+    for (vector<Transaction>::iterator it = tx_list->begin(); it != tx_list->end(); ++it) {
+        (*it).set_confirmation_time(block_time);
+    }
+
+    Block* b = new Block(num_blocks, tx_list, block_time);
 
     // let the network know about the block
     nodeList->at(random_index)->broadcast_block(b);
@@ -176,8 +183,9 @@ void tx_relay() {
     unsigned int tx_no = transfer[3];
     float tx_fee = transfer[4];
     unsigned int node_no = transfer[5];
+    float broadcast_time = transfer[6];
     printf("tx_relay() of tx %d to node %d\n", tx_no, node_no);
-    Transaction tx = Transaction(tx_no, tx_fee);
+    Transaction tx = Transaction(tx_no, tx_fee, broadcast_time);
     nodeList->at(node_no)->broadcast_transaction(tx);
 }
 
@@ -185,9 +193,10 @@ void block_relay() {
     unsigned int block_no = transfer[3];
     unsigned int from_node = transfer[4];
     unsigned int to_node = transfer[5];
+    float block_time = transfer[6];
     printf("block_relay() of block %d from node %d to node %d\n", block_no, from_node, to_node);
     vector<Transaction>* transactions = nodeList->at(from_node)->get_block_transactions(block_no);
-    Block* b = new Block(block_no, transactions);
+    Block* b = new Block(block_no, transactions, block_time);
     nodeList->at(to_node)->broadcast_block(b);
 }
 

@@ -89,6 +89,7 @@ void Node::broadcast_transaction(Transaction tx) {
             transfer[3] = tx.get_tx_no();
             transfer[4] = tx.get_tx_fee();
             transfer[5] = (*it)->get_other_node()->get_node_no();
+            transfer[6] = tx.get_broadcast_time();
             event_schedule(sim_time + (*it)->get_speed(), EVENT_TX_RELAY);
             // record that it's in transit so it isn't broadcast again before it arrives
             (*it)->get_other_node()->in_transit_tx(tx.get_tx_no());
@@ -122,6 +123,7 @@ void Node::broadcast_block(Block* b) {
             transfer[3] = b->get_block_no();
             transfer[4] = this->get_node_no();
             transfer[5] = (*it)->get_other_node()->get_node_no();
+            transfer[6] = b->get_block_time();
             event_schedule(sim_time + (2 * (*it)->get_speed()), EVENT_BLOCK_RELAY);
             // record that it's in transit so it isn't broadcast again before it arrives
             (*it)->get_other_node()->in_transit_block(b->get_block_no());
