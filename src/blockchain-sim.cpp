@@ -109,12 +109,16 @@ void init_model() {
     for (unsigned int i = 0; i < num_miners; ++i) {
         Node* n = new Node(MINER, i);
         nodeList->push_back(n);
+	#ifdef DEBUG
         printf("created MINER node %d\n", i);
+	#endif
     }
     for (unsigned int i = 0; i < num_relays; ++i) {
         Node* n = new Node(RELAY, num_miners + i);
         nodeList->push_back(n);
-        printf("created RELAY node %d\n", num_miners + i);
+	#ifdef DEBUG
+	printf("created RELAY node %d\n", num_miners + i);
+	#endif
     }
 
     // add links between nodes based on min_links_per_node and mean_link_speed
@@ -126,7 +130,9 @@ void init_model() {
             while (node1 == node2 || (*it)->linked_to(node2)) {
                 node2 = rand() % NUMBER_NODES;
             }
-            printf("linking node %d to node %d\n", node1, node2);
+	    #ifdef DEBUG
+	    printf("linking node %d to node %d\n", node1, node2);
+	    #endif
             add_link(*it, nodeList->at(node2), expon(mean_link_speed, STREAM_LINK_SPEED));
         }
     }
@@ -141,7 +147,9 @@ void new_transaction() {
 
     unsigned int random_index = rand() % NUMBER_NODES;
 
+    #ifdef DEBUG
     printf("new_transaction() %d from %d at t=%f\n", num_transactions, random_index, sim_time);
+    #endif
 
     //TODO use a smart algorithm to determine fee
     Transaction tx = Transaction(num_transactions, 0.01, sim_time);
@@ -161,7 +169,9 @@ void new_block() {
         random_index = rand() % NUMBER_NODES;
     }
 
+    #ifdef DEBUG
     printf("new_block() from %d\n", random_index);
+    #endif
 
     float block_time = sim_time;
 
@@ -184,7 +194,9 @@ void tx_relay() {
     float tx_fee = transfer[4];
     unsigned int node_no = transfer[5];
     float broadcast_time = transfer[6];
+    #ifdef DEBUG
     printf("tx_relay() of tx %d to node %d\n", tx_no, node_no);
+    #endif
     Transaction tx = Transaction(tx_no, tx_fee, broadcast_time);
     nodeList->at(node_no)->broadcast_transaction(tx);
 }
@@ -194,7 +206,9 @@ void block_relay() {
     unsigned int from_node = transfer[4];
     unsigned int to_node = transfer[5];
     float block_time = transfer[6];
+    #ifdef DEBUG
     printf("block_relay() of block %d from node %d to node %d\n", block_no, from_node, to_node);
+    #endif
     vector<Transaction>* transactions = nodeList->at(from_node)->get_block_transactions(block_no);
     Block* b = new Block(block_no, transactions, block_time);
     nodeList->at(to_node)->broadcast_block(b);
