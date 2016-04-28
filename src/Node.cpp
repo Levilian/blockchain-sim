@@ -7,7 +7,7 @@
 Node::Node(Type type, unsigned int node_no) {
     this->_type = type;
     this->_node_no = node_no;
-    this->_adjList = new vector<Link*>;
+    this->_adj_list = new vector<Link*>;
     this->_known_transactions = new vector<Transaction>;
     this->_known_blocks = new vector<Block*>;
     this->_in_transit_tx_nos = new vector<unsigned int>;
@@ -15,10 +15,10 @@ Node::Node(Type type, unsigned int node_no) {
 }
 
 Node::~Node() {
-    for (vector<Link*>::iterator it = this->_adjList->begin(); it != this->_adjList->end(); ++it) {
+    for (vector<Link*>::iterator it = this->_adj_list->begin(); it != this->_adj_list->end(); ++it) {
         delete *it;
     }
-    delete this->_adjList;
+    delete this->_adj_list;
     delete this->_known_transactions;
     for (vector<Block*>::iterator it = this->_known_blocks->begin(); it != this->_known_blocks->end(); ++it) {
         delete (*it)->get_transactions();
@@ -31,7 +31,7 @@ Node::~Node() {
 
 void Node::add_link(Node* other_node, float speed) {
     Link* new_link = new Link(other_node, speed);
-    this->_adjList->push_back(new_link);
+    this->_adj_list->push_back(new_link);
 }
 
 bool Node::aware_of(Transaction tx) {
@@ -58,7 +58,7 @@ bool Node::aware_of(Block* b) {
 
 bool Node::linked_to(unsigned int node_no) {
     bool linked = false;
-    for (vector<Link*>::iterator it = this->_adjList->begin(); it != this->_adjList->end(); ++it) {
+    for (vector<Link*>::iterator it = this->_adj_list->begin(); it != this->_adj_list->end(); ++it) {
         if ((*it)->get_other_node()->get_node_no() == node_no) linked = true;
     }
     return linked;
@@ -82,7 +82,7 @@ void Node::broadcast_transaction(Transaction tx) {
     this->_in_transit_tx_nos->erase(new_end, this->_in_transit_tx_nos->end());
 
     // schedule events for neighboring nodes to be aware of it
-    for (vector<Link*>::iterator it = this->_adjList->begin(); it != this->_adjList->end(); ++it) {
+    for (vector<Link*>::iterator it = this->_adj_list->begin(); it != this->_adj_list->end(); ++it) {
         if (!((*it)->get_other_node()->aware_of(tx))) {
             #ifdef DEBUG
             printf("broadcasting tx %d from node %d to node %d\n",
@@ -122,7 +122,7 @@ void Node::broadcast_block(Block* b) {
     #endif
 
     // schedule events for neighboring nodes to be aware of it
-    for (vector<Link*>::iterator it = this->_adjList->begin(); it != this->_adjList->end(); ++it) {
+    for (vector<Link*>::iterator it = this->_adj_list->begin(); it != this->_adj_list->end(); ++it) {
         if (!((*it)->get_other_node()->aware_of(b))) {
             #ifdef DEBUG
             printf("broadcasting block %d from node %d to node %d\n",

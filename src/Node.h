@@ -70,7 +70,7 @@ class Node {
         int get_greediness() { return _greediness; }
         Type get_type() const { return _type; }
         void add_link(Node* otherNode, float speed);
-        unsigned int get_num_links() { return _adjList->size(); }
+        unsigned int get_num_links() { return _adj_list->size(); }
         void in_transit_tx(unsigned int tx_no);
         void in_transit_block(unsigned int block_no);
         void broadcast_transaction(Transaction tx);
@@ -87,7 +87,7 @@ class Node {
     private:
         friend ostream& operator<<(ostream& os, const Node& n);
         Type _type;
-        vector<Link*>* _adjList;
+        vector<Link*>* _adj_list;
         vector<Transaction>* _known_transactions;
         vector<Block*>* _known_blocks;
         vector<unsigned int>* _in_transit_tx_nos;
