@@ -18,4 +18,3 @@
 #define DEFAULT_BLOCK_REWARD 25.0 // default reward for miners when they mine a block
 #define BLOCKS_BETWEEN_REWARD_CHANGES 10 // number of blocks between changes in block reward amount
 #define IN_FILENAME "blockchain-sim.in"
-#define OUT_FILENAME "blockchain-sim.out"

@@ -16,8 +16,8 @@ using namespace std;
 
 int num_blocks, num_transactions, min_links_per_node;
 float mean_tx_interarrival, mean_block_interarrival, mean_link_speed;
-FILE *infile, *outfile;
-vector<Node*>* nodeList;
+FILE *infile;
+vector<Node*>* node_list;
 
 void init_model(); // initialize the model
 void add_link(Node* node1, Node* node2, float speed); // add a communication link between nodes
@@ -34,12 +34,6 @@ int main() {
         perror(IN_FILENAME);
         exit(1);
     }
-    outfile = fopen(OUT_FILENAME, "w");
-    if (outfile == NULL) {
-        perror(OUT_FILENAME);
-        fclose(infile);
-        exit(1);
-    }
 
     // Read input parameters.
     fscanf(infile, "%d %f %f %f", &min_links_per_node, &mean_tx_interarrival,
@@ -47,10 +41,10 @@ int main() {
     fclose(infile);
 
     // Write report heading with input parameters.
-    fprintf(outfile, "Mean interarrival time for transactions: %.3f\n", mean_tx_interarrival);
-    fprintf(outfile, "Mean interarrival time for blocks: %.3f\n", mean_block_interarrival);
-    fprintf(outfile, "Mean link speed: %.3f\n", mean_link_speed);
-    fprintf(outfile, "Min links per node: %d\n", min_links_per_node);
+    printf("Mean interarrival time for transactions: %.3f\n", mean_tx_interarrival);
+    printf("Mean interarrival time for blocks: %.3f\n", mean_block_interarrival);
+    printf("Mean link speed: %.3f\n", mean_link_speed);
+    printf("Min links per node: %d\n", min_links_per_node);
 
     // initialize simlib
     init_simlib();
@@ -85,10 +79,9 @@ int main() {
 
     // write out a report
     report();
-    fclose(outfile);
 
     // free memory and exit
-    for (vector<Node*>::iterator it = nodeList->begin(); it != nodeList->end(); ++it) {
+    for (vector<Node*>::iterator it = node_list->begin(); it != node_list->end(); ++it) {
         delete *it;
     }
     return 0;
@@ -96,7 +89,7 @@ int main() {
 
 void init_model() {
     // allocate memory for a vector of nodes
-    nodeList = new vector<Node*>;
+    node_list = new vector<Node*>;
 
     // initialize statistical variables and random number streams
     num_blocks = 0;
@@ -124,27 +117,27 @@ void init_model() {
       lcgrandst((time(NULL) - getpid()), STREAM_LINK_SPEED);
     }
 
-    // add nodes to the nodeList
+    // add nodes to the node_list
     unsigned int num_miners = MINER_FRACTION * NUMBER_NODES;
     unsigned int num_relays = NUMBER_NODES - num_miners;
     for (unsigned int i = 0; i < num_miners; ++i) {
         Node* n = new Node(MINER, i);
         n->set_greediness(rand() % 100 + 1);
-        nodeList->push_back(n);
+        node_list->push_back(n);
         #ifdef DEBUG
         printf("created MINER node %d\n", i);
         #endif
     }
     for (unsigned int i = 0; i < num_relays; ++i) {
         Node* n = new Node(RELAY, num_miners + i);
-        nodeList->push_back(n);
+        node_list->push_back(n);
         #ifdef DEBUG
         printf("created RELAY node %d\n", num_miners + i);
         #endif
     }
 
     // add links between nodes based on min_links_per_node and mean_link_speed
-    for (vector<Node*>::iterator it = nodeList->begin(); it != nodeList->end(); ++it) {
+    for (vector<Node*>::iterator it = node_list->begin(); it != node_list->end(); ++it) {
         while ((*it)->get_num_links() < min_links_per_node) { // if more links are needed
             unsigned int node1 = (*it)->get_node_no();
             // find a node to link with
@@ -155,7 +148,7 @@ void init_model() {
             #ifdef DEBUG
             printf("linking node %d to node %d\n", node1, node2);
             #endif
-            add_link(*it, nodeList->at(node2), expon(mean_link_speed, STREAM_LINK_SPEED));
+            add_link(*it, node_list->at(node2), expon(mean_link_speed, STREAM_LINK_SPEED));
         }
     }
 
@@ -170,7 +163,7 @@ void new_transaction() {
     unsigned int random_index = rand() % NUMBER_NODES;
 
     // the node should decide the tx fee
-    float tx_fee = nodeList->at(random_index)->decide_tx_fee();
+    float tx_fee = node_list->at(random_index)->decide_tx_fee();
 
     #ifdef DEBUG
     printf("new_transaction() %d from %d with fee %f at t=%f\n", num_transactions, random_index, tx_fee, sim_time);
@@ -179,7 +172,7 @@ void new_transaction() {
     Transaction tx = Transaction(num_transactions, tx_fee, sim_time);
 
     // let the network know about the transaction
-    nodeList->at(random_index)->broadcast_transaction(tx);
+    node_list->at(random_index)->broadcast_transaction(tx);
 
     // schedule the next transaction
     event_schedule(sim_time + expon(mean_tx_interarrival, STREAM_TX_INTERARRIVAL), EVENT_NEW_TRANSACTION);
@@ -189,7 +182,7 @@ void new_block() {
     ++num_blocks;
 
     unsigned int random_index = rand() % NUMBER_NODES;
-    while (!(nodeList->at(random_index)->get_type() == MINER)) {
+    while (!(node_list->at(random_index)->get_type() == MINER)) {
         random_index = rand() % NUMBER_NODES;
     }
 
@@ -202,12 +195,12 @@ void new_block() {
     int number_of_reward_changes = num_blocks / BLOCKS_BETWEEN_REWARD_CHANGES;
     float block_reward = DEFAULT_BLOCK_REWARD / pow(2, number_of_reward_changes);
 
-    vector<Transaction>* tx_list = nodeList->at(random_index)->decide_included_tx_list(block_reward, block_time);
+    vector<Transaction>* tx_list = node_list->at(random_index)->decide_included_tx_list(block_reward, block_time);
 
     Block* b = new Block(num_blocks, tx_list, block_time, block_reward);
 
     // let the network know about the block
-    nodeList->at(random_index)->broadcast_block(b);
+    node_list->at(random_index)->broadcast_block(b);
 
     // schedule the next block
     event_schedule(sim_time + expon(mean_block_interarrival, STREAM_BLOCK_INTERARRIVAL), EVENT_NEW_BLOCK);
@@ -222,7 +215,7 @@ void tx_relay() {
     printf("tx_relay() of tx %d to node %d\n", tx_no, node_no);
     #endif
     Transaction tx = Transaction(tx_no, tx_fee, broadcast_time);
-    nodeList->at(node_no)->broadcast_transaction(tx);
+    node_list->at(node_no)->broadcast_transaction(tx);
 }
 
 void block_relay() {
@@ -234,9 +227,9 @@ void block_relay() {
     #ifdef DEBUG
     printf("block_relay() of block %d from node %d to node %d\n", block_no, from_node, to_node);
     #endif
-    vector<Transaction>* transactions = nodeList->at(from_node)->get_block_transactions(block_no);
+    vector<Transaction>* transactions = node_list->at(from_node)->get_block_transactions(block_no);
     Block* b = new Block(block_no, transactions, block_time, block_reward);
-    nodeList->at(to_node)->broadcast_block(b);
+    node_list->at(to_node)->broadcast_block(b);
 }
 
 void report() {
@@ -248,7 +241,7 @@ void report() {
     printf("Avg tx fee: %f\n", transfer[1]);
     // find number of confirmed and uncomfirmed transactions
     unordered_set<unsigned int> confirmed_tx_nos, known_tx_nos;
-    for (vector<Node*>::iterator it = nodeList->begin(); it != nodeList->end(); ++it) {
+    for (vector<Node*>::iterator it = node_list->begin(); it != node_list->end(); ++it) {
         vector<Transaction>* tx_list = (*it)->get_known_transactions();
         for (vector<Transaction>::iterator it2 = tx_list->begin(); it2 != tx_list->end(); ++it2) {
             known_tx_nos.insert(it2->get_tx_no());
