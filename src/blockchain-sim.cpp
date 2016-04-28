@@ -27,8 +27,8 @@ void tx_relay(); // run when transactions are relayed to nodes
 void block_relay(); // run when blocks are relayed to nodes
 void report(); // print statistics from the simulation run
 
-int main() {
-    // Open input and output files.
+int main(int argc, char* argv[]) {
+  /*// Open input and output files.
     infile  = fopen(IN_FILENAME,  "r");
     if (infile == NULL) {
         perror(IN_FILENAME);
@@ -38,7 +38,17 @@ int main() {
     // Read input parameters.
     fscanf(infile, "%d %f %f %f", &min_links_per_node, &mean_tx_interarrival,
                                   &mean_block_interarrival, &mean_link_speed);
-    fclose(infile);
+				  fclose(infile); */
+
+    if (argc == 5) {
+      min_links_per_node = atof(argv[1]);
+      mean_tx_interarrival = atof(argv[2]);
+      mean_block_interarrival = atof(argv[3]);
+      mean_link_speed = atof(argv[4]);
+    } else {
+      fprintf(stderr, "Wrong number of arguments.\n");
+      return 1;
+    }
 
     // Write report heading with input parameters.
     printf("Mean interarrival time for transactions: %.3f\n", mean_tx_interarrival);

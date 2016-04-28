@@ -11,8 +11,8 @@
 #define STREAM_BLOCK_INTERARRIVAL 2 // random number stream for block interarrival times
 #define STREAM_LINK_SPEED 3 // random number stream for link speeds between nodes
 #define LIST_TRANSACTIONS 1 // list to hold all transactions
-#define MAX_BLOCKS 100 // the simulation will be stopped after this many blocks are mined
-#define NUMBER_NODES 10 // total number of nodes on the network
+#define MAX_BLOCKS 200 // the simulation will be stopped after this many blocks are mined
+#define NUMBER_NODES 20 // total number of nodes on the network
 #define MINER_FRACTION 0.1 // fraction of the nodes that are miners (rather than relay nodes)
 #define DEFAULT_FEE 0.01 // default value for transaction fees
 #define DEFAULT_BLOCK_REWARD 25.0 // default reward for miners when they mine a block
