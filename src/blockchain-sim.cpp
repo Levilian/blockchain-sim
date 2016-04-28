@@ -1,5 +1,6 @@
 
 // The code below simulates a P2P network similar to Bitcoin.
+// Usage: ./blockchain-sim <min_links_per_node> <mean_tx_interarrival> <mean_block_interarrival> <mean_link_speed>
 
 #include "Node.h"
 #include "simlib.h"
@@ -28,17 +29,6 @@ void block_relay(); // run when blocks are relayed to nodes
 void report(); // print statistics from the simulation run
 
 int main(int argc, char* argv[]) {
-  /*// Open input and output files.
-    infile  = fopen(IN_FILENAME,  "r");
-    if (infile == NULL) {
-        perror(IN_FILENAME);
-        exit(1);
-    }
-
-    // Read input parameters.
-    fscanf(infile, "%d %f %f %f", &min_links_per_node, &mean_tx_interarrival,
-                                  &mean_block_interarrival, &mean_link_speed);
-				  fclose(infile); */
 
     if (argc == 5) {
       min_links_per_node = atof(argv[1]);
