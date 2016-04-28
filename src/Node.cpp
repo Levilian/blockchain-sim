@@ -84,10 +84,10 @@ void Node::broadcast_transaction(Transaction tx) {
     // schedule events for neighboring nodes to be aware of it
     for (vector<Link*>::iterator it = this->_adjList->begin(); it != this->_adjList->end(); ++it) {
         if (!((*it)->get_other_node()->aware_of(tx))) {
-          #ifdef DEBUG
-	  printf("broadcasting tx %d from node %d to node %d\n",
+            #ifdef DEBUG
+            printf("broadcasting tx %d from node %d to node %d\n",
                    tx.get_tx_no(), this->get_node_no(), (*it)->get_other_node()->get_node_no());
-	  #endif
+            #endif
             transfer[3] = tx.get_tx_no();
             transfer[4] = tx.get_tx_fee();
             transfer[5] = (*it)->get_other_node()->get_node_no();
@@ -124,10 +124,10 @@ void Node::broadcast_block(Block* b) {
     // schedule events for neighboring nodes to be aware of it
     for (vector<Link*>::iterator it = this->_adjList->begin(); it != this->_adjList->end(); ++it) {
         if (!((*it)->get_other_node()->aware_of(b))) {
-	  #ifdef DEBUG
-	  printf("broadcasting block %d from node %d to node %d\n",
-                   b->get_block_no(), this->get_node_no(), (*it)->get_other_node()->get_node_no());
-	  #endif
+            #ifdef DEBUG
+            printf("broadcasting block %d from node %d to node %d\n",
+                           b->get_block_no(), this->get_node_no(), (*it)->get_other_node()->get_node_no());
+            #endif
             transfer[3] = b->get_block_no();
             transfer[4] = this->get_node_no();
             transfer[5] = (*it)->get_other_node()->get_node_no();
@@ -156,7 +156,9 @@ float Node::decide_tx_fee() {
         }
         float avg_tx_fee = total_tx_fees / this->_known_transactions->size();
     }
+    #ifdef DEBUG
     printf("avg_tx_fee: %f\n", avg_tx_fee);
+    #endif
 
     // calculate avg time to confirmation in the most recent block
     float avg_confirmation_time = 0;
@@ -168,12 +170,16 @@ float Node::decide_tx_fee() {
         }
         avg_confirmation_time = total_time_to_confirmation / b->get_transactions()->size();
     }
+    #ifdef DEBUG
     printf("avg_confirmation_time: %f\n", avg_confirmation_time);
+    #endif
 
     // get the avg time to confirmation over the course of the simulation
     sampst(0.0, -SAMPST_TTC);
     float overall_avg_ttc = transfer[1];
+    #ifdef DEBUG
     printf("overall_avg_ttc: %f\n", overall_avg_ttc);
+    #endif
 
     // the fee should be proportional to the amount of network congestion
     if (avg_confirmation_time == 0)

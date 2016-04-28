@@ -109,16 +109,16 @@ void init_model() {
     for (unsigned int i = 0; i < num_miners; ++i) {
         Node* n = new Node(MINER, i);
         nodeList->push_back(n);
-	#ifdef DEBUG
+        #ifdef DEBUG
         printf("created MINER node %d\n", i);
-	#endif
+        #endif
     }
     for (unsigned int i = 0; i < num_relays; ++i) {
         Node* n = new Node(RELAY, num_miners + i);
         nodeList->push_back(n);
-	#ifdef DEBUG
-	printf("created RELAY node %d\n", num_miners + i);
-	#endif
+        #ifdef DEBUG
+        printf("created RELAY node %d\n", num_miners + i);
+        #endif
     }
 
     // add links between nodes based on min_links_per_node and mean_link_speed
@@ -130,9 +130,9 @@ void init_model() {
             while (node1 == node2 || (*it)->linked_to(node2)) {
                 node2 = rand() % NUMBER_NODES;
             }
-	    #ifdef DEBUG
-	    printf("linking node %d to node %d\n", node1, node2);
-	    #endif
+            #ifdef DEBUG
+            printf("linking node %d to node %d\n", node1, node2);
+            #endif
             add_link(*it, nodeList->at(node2), expon(mean_link_speed, STREAM_LINK_SPEED));
         }
     }
