@@ -37,7 +37,7 @@ void Node::add_link(Node* other_node, float speed) {
 bool Node::aware_of(Transaction tx) {
     bool already_known = false;
     for (vector<Transaction>::iterator it = this->_known_transactions->begin(); it != this->_known_transactions->end(); ++it) {
-        if ((*it).get_tx_no() == tx.get_tx_no()) already_known = true;
+        if (it->get_tx_no() == tx.get_tx_no()) already_known = true;
     }
     for (vector<unsigned int>::iterator it = this->_in_transit_tx_nos->begin(); it != this->_in_transit_tx_nos->end(); ++it) {
         if (*it == tx.get_tx_no()) already_known = true;
@@ -114,7 +114,7 @@ void Node::broadcast_block(Block* b) {
     #endif
     for (vector<Transaction>::iterator it = b->get_transactions()->begin(); it != b->get_transactions()->end(); ++it) {
         auto new_end = remove_if(this->_known_transactions->begin(), this->_known_transactions->end(),
-                                 [&](Transaction  t) { return t.get_tx_no() == (*it).get_tx_no(); });
+                                 [&](Transaction  t) { return t.get_tx_no() == it->get_tx_no(); });
         this->_known_transactions->erase(new_end, this->_known_transactions->end());
     }
     #ifdef DEBUG
@@ -132,6 +132,7 @@ void Node::broadcast_block(Block* b) {
             transfer[4] = this->get_node_no();
             transfer[5] = (*it)->get_other_node()->get_node_no();
             transfer[6] = b->get_block_time();
+            transfer[7] = b->get_block_reward();
             event_schedule(sim_time + (2 * (*it)->get_speed()), EVENT_BLOCK_RELAY);
             // record that it's in transit so it isn't broadcast again before it arrives
             (*it)->get_other_node()->in_transit_block(b->get_block_no());
@@ -152,7 +153,7 @@ float Node::decide_tx_fee() {
     if (this->_known_transactions->size() > 0) {
         float total_tx_fees = 0;
         for (vector<Transaction>::iterator it = this->_known_transactions->begin(); it != this->_known_transactions->end(); ++it) {
-            total_tx_fees += (*it).get_tx_fee();
+            total_tx_fees += it->get_tx_fee();
         }
         float avg_tx_fee = total_tx_fees / this->_known_transactions->size();
     }
@@ -186,6 +187,41 @@ float Node::decide_tx_fee() {
         return DEFAULT_FEE;
     else
         return avg_tx_fee * (avg_confirmation_time / overall_avg_ttc);
+}
+
+vector<Transaction>* Node::decide_included_tx_list(float block_reward, float block_time) {
+    // decide which transactions to include based on fees and block reward and greediness
+
+    if (this->_greediness == 0 || this->_known_transactions->size() == 0) {
+        #ifdef DEBUG
+        printf("Included 0 transactions\n");
+        #endif
+        return new vector<Transaction>;
+    }
+
+    // sort transactions by fee
+    sort(this->_known_transactions->begin(), this->_known_transactions->end(),
+         [](Transaction t1, Transaction t2) { return t1.get_tx_fee() < t2.get_tx_fee(); });
+
+    // we should be greedier with tx fees if the block reward is low
+    float reward_factor = 1 - (block_reward / DEFAULT_BLOCK_REWARD);
+    float greediness_delta = (100 - this->_greediness) * reward_factor;
+    float real_greediness = this->_greediness + greediness_delta;
+
+    // include high-fee transactions based on greediness
+    int last_tx_index = (int)(((float)real_greediness / 100.0) * this->_known_transactions->size());
+    vector<Transaction>* tx_list = new vector<Transaction>;
+    for (int i = 0; i < last_tx_index; ++i) {
+        Transaction t = this->_known_transactions->at(i);
+        t.set_confirmation_time(block_time);
+        float time_to_conf = block_time - t.get_broadcast_time();
+        sampst(time_to_conf, SAMPST_TTC);
+        tx_list->push_back(t);
+    }
+    #ifdef DEBUG
+    printf("Included %d transactions of %d\n", tx_list->size(), this->_known_transactions->size());
+    #endif
+    return tx_list;
 }
 
 ostream& operator<<(ostream& os, const Node& n) {

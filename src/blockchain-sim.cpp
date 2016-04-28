@@ -8,11 +8,12 @@
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <algorithm>
 #include "blockchain-sim-defs.h"
 
 using namespace std;
 
-int num_blocks, num_transactions, block_reward, min_links_per_node;
+int num_blocks, num_transactions, min_links_per_node;
 float mean_tx_interarrival, mean_link_speed; // tx is short for transaction
 FILE *infile, *outfile;
 vector<Node*>* nodeList;
@@ -40,21 +41,20 @@ int main() {
     }
 
     // Read input parameters.
-    fscanf(infile, "%d %d %f %f", &block_reward, &min_links_per_node,
+    fscanf(infile, "%d %f %f", &min_links_per_node,
            &mean_tx_interarrival, &mean_link_speed);
     fclose(infile);
 
     // Write report heading with input parameters.
     fprintf(outfile, "Mean interarrival time for transactions: %.3f\n", mean_tx_interarrival);
     fprintf(outfile, "Mean link speed: %.3f\n", mean_link_speed);
-    fprintf(outfile, "Block reward: %d\n", block_reward);
     fprintf(outfile, "Min links per node: %d\n", min_links_per_node);
 
     // initialize simlib
     init_simlib();
 
     // set number of attributes per record
-    maxatr = 6;
+    maxatr = 7;
 
     // initialize model
     init_model();
@@ -124,6 +124,7 @@ void init_model() {
     unsigned int num_relays = NUMBER_NODES - num_miners;
     for (unsigned int i = 0; i < num_miners; ++i) {
         Node* n = new Node(MINER, i);
+        n->set_greediness(rand() % 100 + 1);
         nodeList->push_back(n);
         #ifdef DEBUG
         printf("created MINER node %d\n", i);
@@ -193,19 +194,18 @@ void new_block() {
 
     float block_time = sim_time;
 
-    vector<Transaction>* tx_list = nodeList->at(random_index)->get_known_transactions();
-    for (vector<Transaction>::iterator it = tx_list->begin(); it != tx_list->end(); ++it) {
-        it->set_confirmation_time(block_time);
-        float time_to_conf = block_time - it->get_broadcast_time();
-        sampst(time_to_conf, SAMPST_TTC);
-    }
+    int number_of_reward_changes = num_blocks / BLOCKS_BETWEEN_REWARD_CHANGES;
+    float block_reward = DEFAULT_BLOCK_REWARD / pow(2, number_of_reward_changes);
 
-    Block* b = new Block(num_blocks, tx_list, block_time);
+    vector<Transaction>* tx_list = nodeList->at(random_index)->decide_included_tx_list(block_reward, block_time);
+
+    Block* b = new Block(num_blocks, tx_list, block_time, block_reward);
 
     // let the network know about the block
     nodeList->at(random_index)->broadcast_block(b);
 
     // schedule the next block
+    //TODO decouple block times from tx times
     event_schedule(sim_time + expon((mean_tx_interarrival * 10), STREAM_INTERARRIVAL_TIME), EVENT_NEW_BLOCK);
 }
 
@@ -226,11 +226,12 @@ void block_relay() {
     unsigned int from_node = transfer[4];
     unsigned int to_node = transfer[5];
     float block_time = transfer[6];
+    float block_reward = transfer[7];
     #ifdef DEBUG
     printf("block_relay() of block %d from node %d to node %d\n", block_no, from_node, to_node);
     #endif
     vector<Transaction>* transactions = nodeList->at(from_node)->get_block_transactions(block_no);
-    Block* b = new Block(block_no, transactions, block_time);
+    Block* b = new Block(block_no, transactions, block_time, block_reward);
     nodeList->at(to_node)->broadcast_block(b);
 }
 

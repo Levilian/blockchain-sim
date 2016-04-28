@@ -45,24 +45,29 @@ typedef struct Transaction {
 
 typedef struct Block {
     public:
-        Block(unsigned int block_no, vector<Transaction>* transactions, float block_time) {
+        Block(unsigned int block_no, vector<Transaction>* transactions, float block_time, float block_reward) {
             _block_no = block_no;
             _transactions = transactions;
             _block_time = block_time;
+            _block_reward = block_reward;
         }
         unsigned int get_block_no() { return _block_no; }
         vector<Transaction>* get_transactions() { return _transactions; }
         float get_block_time() { return _block_time; }
+        float get_block_reward() { return _block_reward; }
     private:
         unsigned int _block_no;
         vector<Transaction>* _transactions;
         float _block_time;
+        float _block_reward;
 } Block;
 
 class Node {
     public:
         Node(Type type, unsigned int node_no);
         ~Node();
+        void set_greediness(int greediness) { _greediness = greediness; }
+        int get_greediness() { return _greediness; }
         Type get_type() const { return _type; }
         void add_link(Node* otherNode, float speed);
         unsigned int get_num_links() { return _adjList->size(); }
@@ -78,6 +83,7 @@ class Node {
         bool linked_to(unsigned int node_no);
         vector<Transaction>* get_block_transactions(unsigned int block_no);
         float decide_tx_fee();
+        vector<Transaction>* decide_included_tx_list(float block_reward, float block_time);
     private:
         friend ostream& operator<<(ostream& os, const Node& n);
         Type _type;
@@ -87,5 +93,6 @@ class Node {
         vector<unsigned int>* _in_transit_tx_nos;
         vector<unsigned int>* _in_transit_block_nos;
         unsigned int _node_no;
+        int _greediness;
 };
 
