@@ -147,12 +147,14 @@ void new_transaction() {
 
     unsigned int random_index = rand() % NUMBER_NODES;
 
+    // the node should decide the tx fee
+    float tx_fee = nodeList->at(random_index)->decide_tx_fee();
+
     #ifdef DEBUG
-    printf("new_transaction() %d from %d at t=%f\n", num_transactions, random_index, sim_time);
+    printf("new_transaction() %d from %d with fee %f at t=%f\n", num_transactions, random_index, tx_fee, sim_time);
     #endif
 
-    //TODO use a smart algorithm to determine fee
-    Transaction tx = Transaction(num_transactions, 0.01, sim_time);
+    Transaction tx = Transaction(num_transactions, tx_fee, sim_time);
 
     // let the network know about the transaction
     nodeList->at(random_index)->broadcast_transaction(tx);
@@ -177,7 +179,9 @@ void new_block() {
 
     vector<Transaction>* tx_list = nodeList->at(random_index)->get_known_transactions();
     for (vector<Transaction>::iterator it = tx_list->begin(); it != tx_list->end(); ++it) {
-        (*it).set_confirmation_time(block_time);
+        it->set_confirmation_time(block_time);
+        float time_to_conf = block_time - it->get_broadcast_time();
+        sampst(time_to_conf, SAMPST_TTC);
     }
 
     Block* b = new Block(num_blocks, tx_list, block_time);

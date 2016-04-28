@@ -77,6 +77,7 @@ class Node {
         bool aware_of(Block* b);
         bool linked_to(unsigned int node_no);
         vector<Transaction>* get_block_transactions(unsigned int block_no);
+        float decide_tx_fee();
     private:
         friend ostream& operator<<(ostream& os, const Node& n);
         Type _type;
