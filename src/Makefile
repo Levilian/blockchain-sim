@@ -1,17 +1,11 @@
 CC=g++
-CFLAGS=-g --std=c++11
+CFLAGS=--std=c++11
 OBJ=blockchain-sim.o Node.o simlib.o
-
-
-#Stuff taken from stackoverflow
 
 all: executable
 
-debug: CFLAGS += -DDEBUG
+debug: CFLAGS += -DDEBUG -g
 debug: executable
-
-
-# Regular stuff
 
 executable: $(OBJ)
 	$(CC) -o blockchain-sim $(OBJ)
@@ -23,9 +17,9 @@ Node.o: Node.cpp
 	$(CC) $(CFLAGS) -c Node.cpp
 
 simlib.o: simlib.c
-	$(CC) -Wno-macro-redefined -Wno-return-type -x c -c simlib.c
+	$(CC) -x c -c simlib.c
 
 clean:
 	-rm blockchain-sim *.o
 
-.PHONY: clean
+.PHONY: clean debug executable
