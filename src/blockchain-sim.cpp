@@ -99,9 +99,25 @@ void init_model() {
     // initialize statistical variables and random number streams
     num_blocks = 0;
     num_transactions = 0;
-    srand(time(NULL) / 2);
-    lcgrandst((time(NULL) + getpid()), STREAM_INTERARRIVAL_TIME);
-    lcgrandst((time(NULL) - getpid()), STREAM_LINK_SPEED);
+
+    //modified code with get random data from /dev/urandom instead of time
+    int from_urandom;
+    FILE* fp;
+    fp = fopen("/dev/urandom", "r");
+    if (fp != NULL) {
+      fread(&from_urandom, 1, sizeof(int), fp);
+      srand(from_urandom);
+      fread(&from_urandom, 1, sizeof(int), fp);
+      lcgrandst(from_urandom, STREAM_INTERARRIVAL_TIME);
+      fread(&from_urandom, 1, sizeof(int), fp);
+      lcgrandst(from_urandom, STREAM_LINK_SPEED);
+      
+      fclose(fp);
+    } else { //fall back on time if /dev/urandom fails for some reason
+      srand(time(NULL) / 2);
+      lcgrandst((time(NULL) + getpid()), STREAM_INTERARRIVAL_TIME);
+      lcgrandst((time(NULL) - getpid()), STREAM_LINK_SPEED);
+    }
 
     // add nodes to the nodeList
     unsigned int num_miners = MINER_FRACTION * NUMBER_NODES;
