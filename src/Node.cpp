@@ -161,32 +161,41 @@ float Node::decide_tx_fee() {
     printf("avg_tx_fee: %f\n", avg_tx_fee);
     #endif
 
+    // get the avg time to confirmation over the course of the simulation
+    sampst(0.0, -SAMPST_TTC);
+    float overall_avg_ttc = transfer[1];
+    #ifdef DEBUG
+    printf("(fee) overall_avg_ttc: %f\n", overall_avg_ttc);
+    #endif
+
     // calculate avg time to confirmation in the most recent block
     float avg_confirmation_time = 0;
     if (this->_known_blocks->size() > 0) {
         float total_time_to_confirmation = 0;
         Block* b = this->_known_blocks->back();
-        for (vector<Transaction>::iterator it = b->get_transactions()->begin(); it != b->get_transactions()->end(); ++it) {
-            total_time_to_confirmation += (it->get_confirmation_time() - it->get_broadcast_time());
+        if (b->get_transactions()->size() == 0) {
+            // if no transactions were confirmed, that's like an infinite time-to-confirmation
+            avg_confirmation_time = overall_avg_ttc * 10;
+        } else {
+            for (vector<Transaction>::iterator it = b->get_transactions()->begin(); it != b->get_transactions()->end(); ++it) {
+                total_time_to_confirmation += (it->get_confirmation_time() - it->get_broadcast_time());
+            }
+            avg_confirmation_time = total_time_to_confirmation / b->get_transactions()->size();
         }
-        avg_confirmation_time = total_time_to_confirmation / b->get_transactions()->size();
     }
     #ifdef DEBUG
-    printf("avg_confirmation_time: %f\n", avg_confirmation_time);
-    #endif
-
-    // get the avg time to confirmation over the course of the simulation
-    sampst(0.0, -SAMPST_TTC);
-    float overall_avg_ttc = transfer[1];
-    #ifdef DEBUG
-    printf("overall_avg_ttc: %f\n", overall_avg_ttc);
+    printf("(fee) avg_confirmation_time: %f\n", avg_confirmation_time);
     #endif
 
     // the fee should be proportional to the amount of network congestion
-    if (avg_confirmation_time == 0)
-        return DEFAULT_FEE;
-    else
-        return avg_tx_fee * (avg_confirmation_time / overall_avg_ttc);
+    float tx_fee;
+    if (overall_avg_ttc == 0 || avg_confirmation_time == 0) {
+        tx_fee = DEFAULT_FEE;
+    } else {
+        tx_fee = avg_tx_fee * (avg_confirmation_time / overall_avg_ttc);
+    }
+    sampst(tx_fee, SAMPST_TX_FEE);
+    return tx_fee;
 }
 
 vector<Transaction>* Node::decide_included_tx_list(float block_reward, float block_time) {

@@ -241,6 +241,10 @@ void block_relay() {
 void report() {
     printf("Number of blocks: %d\n", num_blocks);
     printf("Number of transactions: %d\n", num_transactions);
+    sampst(0.0, -SAMPST_TTC);
+    printf("Avg time-to-confirmation: %f\n", transfer[1]);
+    sampst(0.0, -SAMPST_TX_FEE);
+    printf("Avg tx fee: %f\n", transfer[1]);
     //TODO print rest of report
 }
 
