@@ -6,8 +6,9 @@
 #define EVENT_TX_RELAY 3 // event type for a transaction being relayed to a node
 #define EVENT_BLOCK_RELAY 4 // event type for a block being relayed to a node
 #define SAMPST_TTC 1 // variable for time-to-confirmation sampling
-#define STREAM_INTERARRIVAL_TIME 1 // random number stream for transaction interarrival times
-#define STREAM_LINK_SPEED 2 // random number stream for link speeds between nodes
+#define STREAM_TX_INTERARRIVAL 1 // random number stream for transaction interarrival times
+#define STREAM_BLOCK_INTERARRIVAL 2 // random number stream for block interarrival times
+#define STREAM_LINK_SPEED 3 // random number stream for link speeds between nodes
 #define LIST_TRANSACTIONS 1 // list to hold all transactions
 #define MAX_BLOCKS 100 // the simulation will be stopped after this many blocks are mined
 #define NUMBER_NODES 10 // total number of nodes on the network

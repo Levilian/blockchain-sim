@@ -14,7 +14,7 @@
 using namespace std;
 
 int num_blocks, num_transactions, min_links_per_node;
-float mean_tx_interarrival, mean_link_speed; // tx is short for transaction
+float mean_tx_interarrival, mean_block_interarrival, mean_link_speed;
 FILE *infile, *outfile;
 vector<Node*>* nodeList;
 
@@ -41,12 +41,13 @@ int main() {
     }
 
     // Read input parameters.
-    fscanf(infile, "%d %f %f", &min_links_per_node,
-           &mean_tx_interarrival, &mean_link_speed);
+    fscanf(infile, "%d %f %f %f", &min_links_per_node, &mean_tx_interarrival,
+                                  &mean_block_interarrival, &mean_link_speed);
     fclose(infile);
 
     // Write report heading with input parameters.
     fprintf(outfile, "Mean interarrival time for transactions: %.3f\n", mean_tx_interarrival);
+    fprintf(outfile, "Mean interarrival time for blocks: %.3f\n", mean_block_interarrival);
     fprintf(outfile, "Mean link speed: %.3f\n", mean_link_speed);
     fprintf(outfile, "Min links per node: %d\n", min_links_per_node);
 
@@ -108,14 +109,17 @@ void init_model() {
       fread(&from_urandom, 1, sizeof(int), fp);
       srand(from_urandom);
       fread(&from_urandom, 1, sizeof(int), fp);
-      lcgrandst(from_urandom, STREAM_INTERARRIVAL_TIME);
+      lcgrandst(from_urandom, STREAM_TX_INTERARRIVAL);
+      fread(&from_urandom, 1, sizeof(int), fp);
+      lcgrandst(from_urandom, STREAM_BLOCK_INTERARRIVAL);
       fread(&from_urandom, 1, sizeof(int), fp);
       lcgrandst(from_urandom, STREAM_LINK_SPEED);
       
       fclose(fp);
     } else { //fall back on time if /dev/urandom fails for some reason
       srand(time(NULL) / 2);
-      lcgrandst((time(NULL) + getpid()), STREAM_INTERARRIVAL_TIME);
+      lcgrandst((time(NULL) + getpid()), STREAM_TX_INTERARRIVAL);
+      lcgrandst((time(NULL) / 4), STREAM_BLOCK_INTERARRIVAL);
       lcgrandst((time(NULL) - getpid()), STREAM_LINK_SPEED);
     }
 
@@ -155,8 +159,8 @@ void init_model() {
     }
 
     // schedule the first transaction and first block to occur
-    event_schedule(sim_time + expon(mean_tx_interarrival, STREAM_INTERARRIVAL_TIME), EVENT_NEW_TRANSACTION);
-    event_schedule(sim_time + expon((mean_tx_interarrival * 10), STREAM_INTERARRIVAL_TIME), EVENT_NEW_BLOCK);
+    event_schedule(sim_time + expon(mean_tx_interarrival, STREAM_TX_INTERARRIVAL), EVENT_NEW_TRANSACTION);
+    event_schedule(sim_time + expon(mean_block_interarrival, STREAM_BLOCK_INTERARRIVAL), EVENT_NEW_BLOCK);
 }
 
 void new_transaction() {
@@ -177,7 +181,7 @@ void new_transaction() {
     nodeList->at(random_index)->broadcast_transaction(tx);
 
     // schedule the next transaction
-    event_schedule(sim_time + expon(mean_tx_interarrival, STREAM_INTERARRIVAL_TIME), EVENT_NEW_TRANSACTION);
+    event_schedule(sim_time + expon(mean_tx_interarrival, STREAM_TX_INTERARRIVAL), EVENT_NEW_TRANSACTION);
 }
 
 void new_block() {
@@ -205,8 +209,7 @@ void new_block() {
     nodeList->at(random_index)->broadcast_block(b);
 
     // schedule the next block
-    //TODO decouple block times from tx times
-    event_schedule(sim_time + expon((mean_tx_interarrival * 10), STREAM_INTERARRIVAL_TIME), EVENT_NEW_BLOCK);
+    event_schedule(sim_time + expon(mean_block_interarrival, STREAM_BLOCK_INTERARRIVAL), EVENT_NEW_BLOCK);
 }
 
 void tx_relay() {
