@@ -1,6 +1,5 @@
 
 // The code below simulates a P2P network similar to Bitcoin.
-// Usage: ./blockchain-sim <min_links_per_node> <mean_tx_interarrival> <mean_block_interarrival> <mean_link_speed>
 
 #include "Node.h"
 #include "simlib.h"
@@ -36,7 +35,7 @@ int main(int argc, char* argv[]) {
       mean_block_interarrival = atof(argv[3]);
       mean_link_speed = atof(argv[4]);
     } else {
-      fprintf(stderr, "Wrong number of arguments.\n");
+      fprintf(stderr, "Usage: ./blockchain-sim <min_links_per_node> <mean_tx_interarrival> <mean_block_interarrival> <mean_link_speed>\n");
       return 1;
     }
 

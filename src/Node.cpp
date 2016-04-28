@@ -148,30 +148,16 @@ vector<Transaction>* Node::get_block_transactions(unsigned int block_no) {
 }
 
 float Node::decide_tx_fee() {
-    // calculate the avg tx fee for known transactions
-    float avg_tx_fee = DEFAULT_FEE;
-    if (this->_known_transactions->size() > 0) {
-        float total_tx_fees = 0;
-        for (vector<Transaction>::iterator it = this->_known_transactions->begin(); it != this->_known_transactions->end(); ++it) {
-            total_tx_fees += it->get_tx_fee();
-        }
-        float avg_tx_fee = total_tx_fees / this->_known_transactions->size();
-    }
-    #ifdef DEBUG
-    printf("avg_tx_fee: %f\n", avg_tx_fee);
-    #endif
-
     // get the avg time to confirmation over the course of the simulation
     sampst(0.0, -SAMPST_TTC);
     float overall_avg_ttc = transfer[1];
-    #ifdef DEBUG
-    printf("(fee) overall_avg_ttc: %f\n", overall_avg_ttc);
-    #endif
 
-    // calculate avg time to confirmation in the most recent block
+    // calculate avg time to confirmation and avg fee in the most recent block
     float avg_confirmation_time = 0;
+    float avg_tx_fee = DEFAULT_FEE;
     if (this->_known_blocks->size() > 0) {
         float total_time_to_confirmation = 0;
+        float total_tx_fees = 0;
         Block* b = this->_known_blocks->back();
         if (b->get_transactions()->size() == 0) {
             // if no transactions were confirmed, that's like an infinite time-to-confirmation
@@ -179,12 +165,16 @@ float Node::decide_tx_fee() {
         } else {
             for (vector<Transaction>::iterator it = b->get_transactions()->begin(); it != b->get_transactions()->end(); ++it) {
                 total_time_to_confirmation += (it->get_confirmation_time() - it->get_broadcast_time());
+                total_tx_fees += it->get_tx_fee();
             }
             avg_confirmation_time = total_time_to_confirmation / b->get_transactions()->size();
+            avg_tx_fee = total_tx_fees / b->get_transactions()->size();
         }
     }
     #ifdef DEBUG
+    printf("(fee) overall_avg_ttc: %f\n", overall_avg_ttc);
     printf("(fee) avg_confirmation_time: %f\n", avg_confirmation_time);
+    printf("avg_tx_fee: %f\n", avg_tx_fee);
     #endif
 
     // the fee should be proportional to the amount of network congestion
