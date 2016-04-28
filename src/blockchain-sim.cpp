@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <algorithm>
+#include <unordered_set>
 #include "blockchain-sim-defs.h"
 
 using namespace std;
@@ -245,6 +246,23 @@ void report() {
     printf("Avg time-to-confirmation: %f\n", transfer[1]);
     sampst(0.0, -SAMPST_TX_FEE);
     printf("Avg tx fee: %f\n", transfer[1]);
+    // find number of confirmed and uncomfirmed transactions
+    unordered_set<unsigned int> confirmed_tx_nos, known_tx_nos;
+    for (vector<Node*>::iterator it = nodeList->begin(); it != nodeList->end(); ++it) {
+        vector<Transaction>* tx_list = (*it)->get_known_transactions();
+        for (vector<Transaction>::iterator it2 = tx_list->begin(); it2 != tx_list->end(); ++it2) {
+            known_tx_nos.insert(it2->get_tx_no());
+        }
+        vector<Block*>* block_list = (*it)->get_known_blocks();
+        for (vector<Block*>::iterator it3 = block_list->begin(); it3 != block_list->end(); ++it3) {
+            vector<Transaction>* block_tx_list = (*it3)->get_transactions();
+            for (vector<Transaction>::iterator it4 = block_tx_list->begin(); it4 != block_tx_list->end(); ++it4) {
+                confirmed_tx_nos.insert(it4->get_tx_no());
+                known_tx_nos.insert(it4->get_tx_no());
+            }
+        }
+    }
+    printf("%% confirmed transactions: %f\n", ((float)confirmed_tx_nos.size() / (float)known_tx_nos.size()));
     //TODO print rest of report
 }
 
