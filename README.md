@@ -9,6 +9,7 @@ This projects attempts to simulate a Bitcoin-like network.
 ## System Requirements
 
 * a C++ compiler (the Makefile assumes g++)
+* the `matplotlib` and `tqdm` Python modules
 
 ## Build Instructions
 1. `$ cd src`
