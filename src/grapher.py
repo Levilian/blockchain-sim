@@ -39,7 +39,7 @@ def graph_it(x_list, y_list, labels, indep, dep):
     plt.ylabel(labels[dep]['y'])
     plt.title(labels[dep]['y'] + " vs. " + labels[indep]['x'])
     plt.grid(True)
-    plt.savefig(labels[dep]['y'] + "_vs_" + labels[indep]['x'] + ".png")
+    plt.savefig("images/" + labels[dep]['y'] + " vs " + labels[indep]['x'] + ".png")
     #plt.show()
     
     
