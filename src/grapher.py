@@ -19,7 +19,7 @@ def one_run(which_result, *args):
     num_transactions = int(lines[5].split()[3])
     avg_ttc = float(lines[6].split()[2])
     avg_fee = float(lines[7].split()[3])
-    percent_confirmed = float(lines[4].split()[3])
+    percent_confirmed = float(lines[8].split()[3])
 
     if which_result == 0:
         return avg_ttc
